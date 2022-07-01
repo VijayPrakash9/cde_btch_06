@@ -1,0 +1,77 @@
+gsutil cp C:\CDE_BATCH_6\usecase\UNINVESTMENT.csv gs://bckt_usecase3/
+-------
+create table stage_emp_dev.uninvestment
+(
+ACCT_EXTNL_NUM	STRING
+SYS_EXTNL_CDE	STRING
+CTRY_INVST_ACCT_CDE	STRING
+GRP_MEMBR_INVST_ACCT_CDE	STRING
+SRCE_SYS_NAME	STRING
+ACCT_MIG_FUND_IND	STRING
+LAST_INGESTION_TIMESTAMP	STRING
+PRM_LNE_OF_BUS_CDE_FILTER	STRING
+CTRY_CDE_FILTER	STRING
+ENTITY_CDE_FILTER	STRING
+)
+---------------------------------------
+create table history_emp_dev.uninvestment
+(
+ACCT_EXTNL_NUM	int64,
+SYS_EXTNL_CDE	int64,
+CTRY_INVST_ACCT_CDE	int64,
+GRP_MEMBR_INVST_ACCT_CDE int64,
+SRCE_SYS_NAME	STRING,
+ACCT_MIG_FUND_IND	STRING,
+LAST_INGESTION_TIMESTAMP	timestamp,
+PRM_LNE_OF_BUS_CDE_FILTER	STRING,
+CTRY_CDE_FILTER	STRING,
+ENTITY_CDE_FILTER	STRING
+)
+---------------
+insert into history_emp_dev.invst_plan_prod
+select
+cast(INVS_PLN_ARR_PRD_SEQ_NUM as int64),
+cast (INVST_PLAN_ARR_SEQ_NUM as int64),
+cast(PROD_ALT_NUM as	int64),
+cast(PROD_CDE_ALT_CLASS_CDE as	int64),
+CTRY_PROD_TRADE_CDE	STRING,
+ASET_CLASS_CDE	STRING,
+current_timestamp(),
+PRM_LNE_OF_BUS_CDE_FILTER	STRING,
+CTRY_CDE_FILTER	STRING,
+ENTITY_CDE_FILTER	STRING
+from `vijays-new-usecase.stage_emp_dev.invst_plan_prod`
+-------------------------------------------
+create or replace table `stage_audit_dev.audit_uninvestment` 
+(
+  Sno integer,
+  Dataset_Name string,
+  Table_Name string,
+  Updated_Time timestamp,
+  Total_Columns integer
+)
+-------------------
+create or replace table history_audit_dev.audit_uninvestment
+(
+  Sno integer,
+  Dataset_Name string,
+  Table_Name string,
+  Updated_Time timestamp,
+  Total_Columns integer
+)
+---------------
+insert into `vijays-new-usecase.stage_audit_dev.audit_uninvestment` values
+(
+  1,"stage_emp_dev","Invst_Plan_Prod",current_timestamp(),
+  (select count(*) as Total_Columns from `vijays-new-usecase.stage_emp_dev.invst_plan_prod`));
+  -
+  insert into `vijays-new-usecase.history_audit_dev.audit_uninvestment` values
+(
+  1,"history_emp_dev","Invst_Plan_Prod",current_timestamp(),
+  (select count(*) as Total_Columns from `vijays-new-usecase.history_emp_dev.invst_plan_prod`));
+  ----------------------------------------
+
+create view `vijays-new-usecase.auth_views_dev.uninvestment_view_pii` as select * from `vijays-new-usecase.history_emp_dev.uninvestment`
+-
+create view `vijays-new-usecase.auth_views_dev.uninvestment_view_no_pii` as select ACCT_EXTNL_NUM,CTRY_INVST_ACCT_CDE,SRCE_SYS_NAME  from `vijays-new-usecase.history_emp_dev.uninvestment`
+------------------------------
